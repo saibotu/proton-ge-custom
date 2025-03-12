@@ -340,6 +340,10 @@
     echo "WINE: -PENDING- GetDpiAwarenessContextForProcess (GTA V Enhanced)"
     # https://gitlab.winehq.org/wine/wine/-/merge_requests/6802
     patch -Np1 < ../patches/wine-hotfixes/pending/6802.patch
+
+    # https://gitlab.winehq.org/wine/wine/-/merge_requests/5139
+    echo "WINE: -PENDING- QOSCloseHandle (Discord Social SDK)"
+    patch -Np1 < ../patches/wine-hotfixes/pending/qwave-qosclosehandle-5139.patch
 ### END WINE PENDING UPSTREAM SECTION ###
 
 

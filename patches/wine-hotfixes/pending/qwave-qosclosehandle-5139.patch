@@ -1,0 +1,94 @@
+From d6f13d8e0c464db1db7d82462198cbedb58703ff Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Aida=20Jonikien=C4=97?= <aidas957@gmail.com>
+Date: Thu, 22 Feb 2024 21:05:48 +0200
+Subject: [PATCH 1/2] qwave: Add QOSCloseHandle() stub.
+
+Discord calls this function when hanging up a call.
+---
+ dlls/qwave/main.c     | 6 ++++++
+ dlls/qwave/qwave.spec | 2 +-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/dlls/qwave/main.c b/dlls/qwave/main.c
+index a8755d993d1..e29b19b116b 100644
+--- a/dlls/qwave/main.c
++++ b/dlls/qwave/main.c
+@@ -43,3 +43,9 @@ BOOL WINAPI QOSAddSocketToFlow(HANDLE handle, SOCKET socket, PSOCKADDR addr,
+     SetLastError(ERROR_NOT_SUPPORTED);
+     return FALSE;
+ }
++
++BOOL WINAPI QOSCloseHandle(HANDLE handle)
++{
++    FIXME("%p stub!\n", handle);
++    return FALSE;
++}
+diff --git a/dlls/qwave/qwave.spec b/dlls/qwave/qwave.spec
+index 83dfc6787cc..ff2994d11fb 100644
+--- a/dlls/qwave/qwave.spec
++++ b/dlls/qwave/qwave.spec
+@@ -2,7 +2,7 @@
+ @ stub QDLHStartDiagnosingPath
+ @ stdcall QOSAddSocketToFlow(ptr long ptr long long ptr)
+ @ stub QOSCancel
+-@ stub QOSCloseHandle
++@ stdcall QOSCloseHandle(ptr)
+ @ stdcall QOSCreateHandle(ptr ptr)
+ @ stub QOSEnumerateFlows
+ @ stub QOSNotifyFlow
+-- 
+GitLab
+
+
+From 61983465aafaacea3fd7bbb48531ccdc44975fc9 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Aida=20Jonikien=C4=97?= <aidas957@gmail.com>
+Date: Thu, 22 Feb 2024 21:07:14 +0200
+Subject: [PATCH 2/2] qwave: Add tests for QOSCloseHandle().
+
+---
+ dlls/qwave/tests/qos.c | 28 ++++++++++++++++++++++++++++
+ 1 file changed, 28 insertions(+)
+
+diff --git a/dlls/qwave/tests/qos.c b/dlls/qwave/tests/qos.c
+index 7e8fddf64c4..efbc82e693d 100644
+--- a/dlls/qwave/tests/qos.c
++++ b/dlls/qwave/tests/qos.c
+@@ -64,7 +64,35 @@ static void test_QOSCreateHandle(void)
+     ok(GetLastError() == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
+ }
+ 
++static void test_QOSCloseHandle(void)
++{
++    QOS_VERSION ver;
++    HANDLE h;
++    BOOL ret;
++
++    SetLastError(0xdeadbeef);
++    ret = QOSCloseHandle(NULL);
++    ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
++    todo_wine ok(GetLastError() == ERROR_INVALID_HANDLE, "Expected ERROR_INVALID_HANDLE, got %ld\n", GetLastError());
++
++    ver.MajorVersion = 1;
++    ver.MinorVersion = 0;
++    ret = QOSCreateHandle(&ver, &h);
++    todo_wine ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
++
++    SetLastError(0xdeadbeef);
++    ret = QOSCloseHandle(h);
++    todo_wine ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
++    todo_wine ok(GetLastError() == 0xdeadbeef, "Expected 0xdeadbeef, got %ld\n", GetLastError());
++
++    SetLastError(0xdeadbeef);
++    ret = QOSCloseHandle((HANDLE)0xdeadbeef);
++    ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
++    todo_wine ok(GetLastError() == ERROR_INVALID_HANDLE, "Expected ERROR_INVALID_HANDLE, got %ld\n", GetLastError());
++}
++
+ START_TEST(qos)
+ {
+     test_QOSCreateHandle();
++    test_QOSCloseHandle();
+ }
+-- 
+GitLab
+
